@@ -55,7 +55,7 @@ class EuCentralBank < Money::Bank::VariableExchange
   end
 
   def exchange_with(from, to_currency, date=nil, offset=nil)
-    offset ||= 0.0
+    offset ||= ENV['ECB_EXCHANGE_OFFSET'].to_f
     from_base_rate, to_base_rate = nil, nil
     rate = get_rate(from.currency, to_currency, date)
 
