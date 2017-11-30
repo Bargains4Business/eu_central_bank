@@ -50,11 +50,12 @@ class EuCentralBank < Money::Bank::VariableExchange
     open(url).read
   end
 
-  def exchange(cents, from_currency, to_currency, date=nil)
-    exchange_with(Money.new(cents, from_currency), to_currency, date)
+  def exchange(cents, from_currency, to_currency, date=nil, offset=nil)
+    exchange_with(Money.new(cents, from_currency), to_currency, date, offset)
   end
 
-  def exchange_with(from, to_currency, date=nil)
+  def exchange_with(from, to_currency, date=nil, offset=nil)
+    offset ||= 0.0
     from_base_rate, to_base_rate = nil, nil
     rate = get_rate(from.currency, to_currency, date)
 
@@ -74,7 +75,7 @@ class EuCentralBank < Money::Bank::VariableExchange
       rate = to_base_rate / from_base_rate
     end
 
-    calculate_exchange(from, to_currency, rate)
+    calculate_exchange(from, to_currency, rate, offset)
   end
 
   def get_rate(from, to, date = nil)
@@ -211,11 +212,11 @@ class EuCentralBank < Money::Bank::VariableExchange
 
   private
 
-  def calculate_exchange(from, to_currency, rate)
+  def calculate_exchange(from, to_currency, rate, offset=0.0)
     to_currency_money = Money::Currency.wrap(to_currency).subunit_to_unit
     from_currency_money = from.currency.subunit_to_unit
     decimal_money = BigDecimal(to_currency_money) / BigDecimal(from_currency_money)
-    money = (decimal_money * from.cents * rate).round
+    money = (decimal_money * from.cents * rate * (1 + offset)).round
     Money.new(money, to_currency)
   end
 end
