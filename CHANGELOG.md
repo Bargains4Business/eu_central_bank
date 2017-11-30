@@ -1,5 +1,26 @@
 # eu_central_bank changelog
 
+## 1.1.3 (Mar 24 2017)
+
+* Fix a bug in #check_currency_available
+* Update money dependency to 6.9.0
+
+## 1.1.2 (Mar 24 2017)
+
+* Update nokogiri dependency to 1.7.1 to avoid vulnerability
+
+## 1.1.1 (Jan 28 2017)
+
+* Fix nokogiri dependency issue with ruby 2.4.0
+
+## 1.1.0 (Jan 19 2017)
+
+* Added support for ruby 2.3.0 and 2.4.0
+* Fixed ruby warnings
+* Fixed thread safety issue
+* Fixed issue with historical rates
+* Added exception for currencies not in the list
+
 ## 1.0.1 (May 20 2016)
 
 * Fixed compatibility with recent Money gem

@@ -15,7 +15,7 @@ describe "EuCentralBank" do
 
   after(:each) do
     [@tmp_cache_path, @tmp_history_cache_path].each do |file_name|
-      if File.exists? file_name
+      if File.exist? file_name
         File.delete file_name
       end
     end
@@ -23,12 +23,12 @@ describe "EuCentralBank" do
 
   it "should save the xml file from ecb given a file path" do
     @bank.save_rates(@tmp_cache_path)
-    expect(File.exists?(@tmp_cache_path)).to eq(true)
+    expect(File.exist?(@tmp_cache_path)).to eq(true)
   end
 
   it "should save the xml file from ecb given a file path and url" do
     @bank.save_rates(@tmp_history_cache_path, EuCentralBank::ECB_90_DAY_URL)
-    expect(File.exists?(@tmp_history_cache_path)).to eq(true)
+    expect(File.exist?(@tmp_history_cache_path)).to eq(true)
   end
 
   it "should raise an error if an invalid path is given to save_rates" do
@@ -116,15 +116,34 @@ describe "EuCentralBank" do
     end
   end
 
-  it "should return the correct exchange rates using exchange_with" do
-    @bank.update_rates(@cache_path)
-    EuCentralBank::CURRENCIES.each do |currency|
-      subunit_to_unit  = Money::Currency.wrap(currency).subunit_to_unit
-      amount_from_rate = (@exchange_rates["currencies"][currency] * subunit_to_unit).round(0).to_i
+  describe '#exchange_with' do
+    let(:money) { Money.new(100, 'EUR') }
 
-      expect(@bank.exchange_with(Money.new(100, "EUR"), currency).cents).to eq(amount_from_rate)
+    it 'should return the correct exchange rates using exchange_with' do
+      @bank.update_rates(@cache_path)
+      EuCentralBank::CURRENCIES.each do |currency|
+        subunit_to_unit  = Money::Currency.wrap(currency).subunit_to_unit
+        amount_from_rate = (@exchange_rates["currencies"][currency] * subunit_to_unit).round(0).to_i
+
+        expect(@bank.exchange_with(Money.new(100, "EUR"), currency).cents).to eq(amount_from_rate)
+      end
+    end
+
+    it 'raises Money::Bank::UnknownRate if rates are not available' do
+      expect do
+        @bank.exchange_with(money, 'USD')
+      end.to raise_error(Money::Bank::UnknownRate, "No conversion rate known for 'EUR' -> 'USD'")
+    end
+
+    it 'raises Money::Bank::UnknownRate if rates for a specific date are not available' do
+      ['2017-02-22', Date.new(2017, 2, 22)].each do |date|
+        expect do
+          @bank.exchange_with(money, 'USD', date)
+        end.to raise_error(Money::Bank::UnknownRate, "No conversion rate known for 'EUR' -> 'USD' on 2017-02-22")
+      end
     end
   end
+
 
   it "should return the correct exchange rates using historical exchange" do
     yml_path = File.expand_path(File.dirname(__FILE__) + '/historical_exchange_rates.yml')
@@ -220,4 +239,3 @@ describe "EuCentralBank" do
     }.not_to raise_error
   end
 end
-
